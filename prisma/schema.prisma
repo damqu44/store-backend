@@ -1,0 +1,64 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model DeliveryMethod {
+  Id   Int    @id @default(autoincrement())
+  Name String
+
+  Product Product_DeliveryMethods[]
+}
+
+model Product {
+  Id          Int     @id @default(autoincrement())
+  Name        String
+  Quantity    Int
+  ImageLink   String
+  Price       Decimal
+  Description String?
+  CategoryId  Int?
+
+  DeliveryMethods Product_DeliveryMethods[]
+  Category        Category?                 @relation(fields: [CategoryId], references: [Id])
+}
+
+model Product_DeliveryMethods {
+  ProductId        Int
+  DeliveryMethodId Int
+
+  Product        Product        @relation(fields: [ProductId], references: [Id])
+  DeliveryMethod DeliveryMethod @relation(fields: [DeliveryMethodId], references: [Id])
+
+  @@id([ProductId, DeliveryMethodId])
+}
+
+model Category {
+  Id   Int    @id @default(autoincrement())
+  Name String
+
+  Products Product[]
+}
+
+model User {
+  Id                Int              @id @default(autoincrement())
+  Name              String
+  LastName          String
+  Email             String           @unique
+  Telephone         Int              @unique
+  Password          String
+  AddressDeliveries AdressDelivery[]
+}
+
+model AdressDelivery {
+  Id      Int    @id @default(autoincrement())
+  Street  String
+  City    String
+  ZipCode String
+  UserId  Int
+  User    User   @relation(fields: [UserId], references: [Id])
+}
