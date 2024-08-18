@@ -5,7 +5,7 @@ const verifyToken = (req, res, next) => {
   const token = req.cookies.authToken || req.headers['authorization']
 
   if (!token) {
-    return res.status(403).json({ error: 'No token provided' })
+    return next()
   }
 
   jwt.verify(token, secret, (err, decoded) => {

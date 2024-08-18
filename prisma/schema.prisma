@@ -8,10 +8,12 @@ generator client {
 }
 
 model DeliveryMethod {
-  Id   Int    @id @default(autoincrement())
-  Name String
+  Id    Int     @id @default(autoincrement())
+  Name  String
+  Price Decimal
 
   Product Product_DeliveryMethods[]
+  Order   Order[]
 }
 
 model Product {
@@ -25,6 +27,8 @@ model Product {
 
   DeliveryMethods Product_DeliveryMethods[]
   Category        Category?                 @relation(fields: [CategoryId], references: [Id])
+  CartItem        CartItem[]
+  OrderItems      OrderItem[]
 }
 
 model Product_DeliveryMethods {
@@ -44,21 +48,102 @@ model Category {
   Products Product[]
 }
 
+enum Gender {
+  MAN
+  FEMALE
+}
+
 model User {
-  Id                Int              @id @default(autoincrement())
-  Name              String
-  LastName          String
-  Email             String           @unique
-  Telephone         Int              @unique
-  Password          String
-  AddressDeliveries AdressDelivery[]
+  Id                       Int              @id @default(autoincrement())
+  Name                     String
+  LastName                 String
+  Email                    String           @unique
+  Telephone                Int              @unique
+  Password                 String
+  Gender                   Gender?
+  BirthDate                DateTime?
+  AddressDeliveries        AdressDelivery[]
+  InvoicesData             InvoiceData[]
+  PrimaryAddressDeliveryId Int?
+  PrimaryInvoiceDataId     Int?
+  Cart                     Cart?
+  Orders                   Order[]
+}
+
+model Cart {
+  Id        Int        @id @default(autoincrement())
+  UserId    Int        @unique
+  User      User       @relation(fields: [UserId], references: [Id])
+  CartItems CartItem[]
+}
+
+model CartItem {
+  Id        Int     @id @default(autoincrement())
+  CartId    Int
+  Cart      Cart    @relation(fields: [CartId], references: [Id])
+  ProductId Int
+  Product   Product @relation(fields: [ProductId], references: [Id])
+  Amount    Int
 }
 
 model AdressDelivery {
-  Id      Int    @id @default(autoincrement())
+  Id       Int     @id @default(autoincrement())
+  Name     String
+  LastName String
+  Street   String
+  City     String
+  ZipCode  String
+  UserId   Int
+  User     User    @relation(fields: [UserId], references: [Id])
+  Orders   Order[]
+}
+
+model InvoiceData {
+  Id      Int     @id @default(autoincrement())
+  Name    String
   Street  String
   City    String
   ZipCode String
+  Nip     String?
   UserId  Int
-  User    User   @relation(fields: [UserId], references: [Id])
+  User    User    @relation(fields: [UserId], references: [Id])
+  Orders  Order[]
 }
+
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  Id               Int            @id @default(autoincrement())
+  UserId           Int
+  User             User           @relation(fields: [UserId], references: [Id])
+  AdressDeliveryId Int
+  AdressDelivery   AdressDelivery @relation(fields: [AdressDeliveryId], references: [Id])
+  InvoiceDataId    Int
+  InvoiceData      InvoiceData    @relation(fields: [InvoiceDataId], references: [Id])
+  OrderItems       OrderItem[]
+  OrderDate        DateTime       @default(now())
+  TotalPrice       Decimal
+  DeliveryMethodId Int
+  DeliveryMethod   DeliveryMethod @relation(fields: [DeliveryMethodId], references: [Id])
+  Status           OrderStatus    @default(PENDING)
+  IsPaid           Boolean        @default(false)
+  Comment          String?
+  DiscountCode     String?
+}
+
+model OrderItem {
+  Id        Int     @id @default(autoincrement())
+  OrderId   Int
+  Order     Order   @relation(fields: [OrderId], references: [Id])
+  ProductId Int
+  Product   Product @relation(fields: [ProductId], references: [Id])
+  Quantity  Int
+  Price     Decimal
+}
+
+//npx prisma migrate dev --name update-schema

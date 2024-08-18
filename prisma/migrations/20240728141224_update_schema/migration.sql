@@ -1,0 +1,34 @@
+-- CreateTable
+CREATE TABLE `Order` (
+    `Id` INTEGER NOT NULL AUTO_INCREMENT,
+    `UserId` INTEGER NOT NULL,
+    `AdressDeliveryId` INTEGER NOT NULL,
+    `OrderDate` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `TotalPrice` DECIMAL(65, 30) NOT NULL,
+    `Status` ENUM('PENDING', 'SHIPPED', 'DELIVERED', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
+
+    PRIMARY KEY (`Id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `OrderItem` (
+    `Id` INTEGER NOT NULL AUTO_INCREMENT,
+    `OrderId` INTEGER NOT NULL,
+    `ProductId` INTEGER NOT NULL,
+    `Quantity` INTEGER NOT NULL,
+    `Price` DECIMAL(65, 30) NOT NULL,
+
+    PRIMARY KEY (`Id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Order` ADD CONSTRAINT `Order_UserId_fkey` FOREIGN KEY (`UserId`) REFERENCES `User`(`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Order` ADD CONSTRAINT `Order_AdressDeliveryId_fkey` FOREIGN KEY (`AdressDeliveryId`) REFERENCES `AdressDelivery`(`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OrderItem` ADD CONSTRAINT `OrderItem_OrderId_fkey` FOREIGN KEY (`OrderId`) REFERENCES `Order`(`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OrderItem` ADD CONSTRAINT `OrderItem_ProductId_fkey` FOREIGN KEY (`ProductId`) REFERENCES `Product`(`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;

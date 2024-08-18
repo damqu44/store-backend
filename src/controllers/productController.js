@@ -53,10 +53,19 @@ const getProductById = async (req, res) => {
       where: { Id: parseInt(id) },
       include: {
         Category: true,
+        DeliveryMethods: {
+          include: {
+            DeliveryMethod: true,
+          },
+        },
       },
     })
     if (product) {
-      res.json(product)
+      const transformedProduct = {
+        ...product,
+        DeliveryMethods: product.DeliveryMethods.map((dm) => dm.DeliveryMethod),
+      }
+      res.json(transformedProduct)
     } else {
       res.status(404).json({ error: 'Product not found' })
     }

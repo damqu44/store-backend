@@ -1,0 +1,27 @@
+-- CreateTable
+CREATE TABLE `Cart` (
+    `Id` INTEGER NOT NULL AUTO_INCREMENT,
+    `UserId` INTEGER NOT NULL,
+
+    UNIQUE INDEX `Cart_UserId_key`(`UserId`),
+    PRIMARY KEY (`Id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `CartItem` (
+    `Id` INTEGER NOT NULL AUTO_INCREMENT,
+    `CartId` INTEGER NOT NULL,
+    `ProductId` INTEGER NOT NULL,
+    `Amount` INTEGER NOT NULL,
+
+    PRIMARY KEY (`Id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Cart` ADD CONSTRAINT `Cart_UserId_fkey` FOREIGN KEY (`UserId`) REFERENCES `User`(`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CartItem` ADD CONSTRAINT `CartItem_CartId_fkey` FOREIGN KEY (`CartId`) REFERENCES `Cart`(`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CartItem` ADD CONSTRAINT `CartItem_ProductId_fkey` FOREIGN KEY (`ProductId`) REFERENCES `Product`(`Id`) ON DELETE RESTRICT ON UPDATE CASCADE;
