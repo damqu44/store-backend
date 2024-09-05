@@ -15,12 +15,9 @@ const getInfo = async (req, res) => {
         Gender: true,
         Telephone: true,
         PrimaryAddressDeliveryId: true,
-        PrimaryInvoiceDataId: true,
         Password: false,
       },
     })
-
-    authorizeUser(req.userId)
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
@@ -28,15 +25,12 @@ const getInfo = async (req, res) => {
 
     res.status(200).json(user)
   } catch (error) {
-    console.error('Error fetching user info:', error)
     res.status(500).json({ error: 'Internal Server Error' })
   }
 }
 
 const getAddresses = async (req, res) => {
   try {
-    authorizeUser(req.userId)
-
     const addresses = await prisma.adressDelivery.findMany({
       where: { UserId: req.userId },
     })
@@ -47,7 +41,9 @@ const getAddresses = async (req, res) => {
 
     res.status(200).json(addresses)
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' })
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal Server Error' })
   }
 }
 
@@ -55,10 +51,11 @@ const editPersonalData = async (req, res) => {
   try {
     const { name, lastName, birthDate, gender } = req.body
 
-    authorizeUser(req.userId)
-
     if (!name || !lastName) {
-      return res.status(400).json({ error: 'Name and LastName are required' })
+      return res.status(400).json({
+        error: 'Name and LastName are required',
+        message: 'Fields cannot be empty',
+      })
     }
 
     const updateData = {
@@ -69,13 +66,20 @@ const editPersonalData = async (req, res) => {
     if (birthDate) {
       updateData.BirthDate = new Date(birthDate)
       if (isNaN(updateData.BirthDate.getTime())) {
-        return res.status(400).json({ error: 'Invalid birth date format' })
+        return res.status(400).json({
+          error: 'Invalid birth date format',
+          message:
+            'Ensure the date is in dd-mm-yyyy format and contains only numbers',
+        })
       }
     }
 
     if (gender) {
       if (!['MAN', 'FEMALE'].includes(gender)) {
-        return res.status(400).json({ error: 'Invalid gender' })
+        return res.status(400).json({
+          error: 'Invalid gender',
+          message: 'Ensure you have chosen one of the listed genders',
+        })
       }
       updateData.Gender = gender
     }
@@ -87,7 +91,33 @@ const editPersonalData = async (req, res) => {
 
     res.json(updatedUser)
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' })
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal Server Error' })
+  }
+}
+
+const getAddressDeliveryById = async (req, res) => {
+  try {
+    const { addressId } = req.body
+
+    if (!addressId) {
+      return res.status(400).json({
+        error: 'Address Delivery Id are required',
+        message: 'Values cannot be null',
+      })
+    }
+    console.log('ADDDDDDDDDRES', addressId)
+
+    const addressDelivery = await prisma.adressDelivery.findUnique({
+      where: { Id: addressId },
+    })
+    console.log('ADDDDDDDDDRES', addressDelivery)
+    res.json(addressDelivery)
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal Server Error' })
   }
 }
 
@@ -95,20 +125,16 @@ const editEmail = async (req, res) => {
   try {
     const { email } = req.body
 
-    authorizeUser(req.userId)
-
     if (!email) {
       return res.status(400).json({ error: 'Email are required' })
     }
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    console.log('Received email:', email)
 
     const currentEmail = await prisma.user.findUnique({
       where: { Id: req.userId },
       select: { Email: true },
     })
-    console.error(email, currentEmail.Email)
 
     if (!emailPattern.test(email)) {
       return res.status(400).json({ error: 'Invalid email address' })
@@ -139,15 +165,15 @@ const editEmail = async (req, res) => {
 
     res.status(200).json({ message: 'Email changed successfully' })
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' })
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal Server Error' })
   }
 }
 
 const editTelephoneNumber = async (req, res) => {
   try {
     const { telephone } = req.body
-
-    authorizeUser(req.userId)
 
     if (!telephone) {
       return res.status(400).json({ error: 'Telephone number are required' })
@@ -160,7 +186,6 @@ const editTelephoneNumber = async (req, res) => {
         message: 'The phone number must contain 9 pieces',
       })
     }
-    console.log(telephone, 'i can see this log(its ok)')
 
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -183,15 +208,15 @@ const editTelephoneNumber = async (req, res) => {
 
     res.status(200).json({ message: 'Telephone Number changed successfully' })
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' })
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal Server Error' })
   }
 }
 
 const editPassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body
-
-    authorizeUser(req.userId)
 
     const user = await prisma.user.findUnique({
       where: { Id: req.userId },
@@ -227,17 +252,17 @@ const editPassword = async (req, res) => {
       message: 'Password changed successfully',
     })
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' })
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal Server Error' })
   }
 }
 
 const addAddressDelivery = async (req, res) => {
   try {
-    const { name, lastName, street, city, zipCode } = req.body
+    const { name, lastName, street, city, zipCode, telephone } = req.body
 
-    authorizeUser(req.userId)
-
-    if (!name || !lastName || !street || !city || !zipCode) {
+    if (!name || !lastName || !street || !city || !zipCode || !telephone) {
       return res.status(400).json({ error: 'All fields are required' })
     }
 
@@ -259,7 +284,16 @@ const addAddressDelivery = async (req, res) => {
         message: 'Zip code format should be xx-xxx',
       })
     }
-    console.log('adding:', name, lastName, street, city, zipCode, req.userId)
+
+    const phonePattern = /^\d{9}$/
+    if (!phonePattern.test(telephone)) {
+      return {
+        status: 400,
+        error: 'Invalid Telephone Number',
+        message: 'The phone number must contain 9 pieces',
+      }
+    }
+
     await prisma.adressDelivery.create({
       data: {
         Name: name,
@@ -267,36 +301,137 @@ const addAddressDelivery = async (req, res) => {
         Street: street,
         City: city,
         ZipCode: zipCode,
+        Telephone: parseInt(telephone),
         UserId: req.userId,
       },
     })
 
     res.status(200).json({ message: 'Address delivery added successfully' })
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' })
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal Server Error' })
   }
 }
 
-const editAddressDelivery = async (req, res) => {}
+const editAddressDelivery = async (req, res) => {
+  try {
+    const { addressId, name, lastName, street, city, zipCode, telephone } =
+      req.body
 
-const deleteAddressDelivery = async (req, res) => {}
+    if (
+      !addressId ||
+      !name ||
+      !lastName ||
+      !street ||
+      !city ||
+      !zipCode ||
+      !telephone
+    ) {
+      return res.status(400).json({ error: 'All fields are required' })
+    }
 
-const changePrimaryAddressDelivery = async (req, res) => {}
+    const zipCodePattern = /^\d{2}-\d{3}$/
+    if (!zipCodePattern.test(zipCode)) {
+      return res.status(400).json({
+        error: 'Invalid Zip Code format',
+        message: 'Zip code format should be xx-xxx',
+      })
+    }
 
-const addInvoiceData = async (req, res) => {}
+    const phonePattern = /^\d{9}$/
+    if (!phonePattern.test(telephone)) {
+      return {
+        status: 400,
+        error: 'Invalid Telephone Number',
+        message: 'The phone number must contain 9 pieces',
+      }
+    }
 
-const editInvoiceData = async (req, res) => {}
-
-const deleteInvoiceData = async (req, res) => {}
-
-const changePrimaryInvoiceData = async (req, res) => {}
-
-function authorizeUser(userId) {
-  if (!userId) {
-    return res.status(401).json({
-      error: 'Unauthorized',
-      message: 'Authentication credentials were not provided',
+    await prisma.adressDelivery.update({
+      where: { Id: addressId },
+      data: {
+        Name: name,
+        LastName: lastName,
+        Street: street,
+        City: city,
+        ZipCode: zipCode,
+        Telephone: parseInt(telephone),
+      },
     })
+
+    res.status(200).json({ message: 'Address delivery updated successfully' })
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal Server Error' })
+  }
+}
+
+const deleteAddressDelivery = async (req, res) => {
+  try {
+    const { addressDeliveryId } = req.body
+
+    if (!addressDeliveryId) {
+      return res.status(400).json({ error: 'Address delivery Id is required' })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { Id: req.userId },
+      select: { PrimaryAddressDeliveryId: true },
+    })
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    if (addressDeliveryId === user.PrimaryAddressDeliveryId) {
+      await prisma.user.update({
+        where: { Id: req.userId },
+        data: { PrimaryAddressDeliveryId: null },
+      })
+    }
+
+    const addressDelivery = await prisma.adressDelivery.findUnique({
+      where: { Id: addressDeliveryId },
+    })
+
+    if (!addressDelivery) {
+      return res.status(404).json({ error: 'Address delivery not found' })
+    }
+
+    await prisma.adressDelivery.delete({
+      where: { Id: addressDeliveryId },
+    })
+
+    res.status(200).json({ message: 'Address delivery removed successfully' })
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal Server Error' })
+  }
+}
+
+const editPrimaryAddressDelivery = async (req, res) => {
+  try {
+    const { addressDeliveryId } = req.body
+
+    if (!addressDeliveryId) {
+      return res.status(400).json({ error: 'Address delivery Id is required' })
+    }
+
+    await prisma.user.update({
+      where: { Id: req.userId },
+      data: { PrimaryAddressDeliveryId: addressDeliveryId },
+    })
+
+    res
+      .status(200)
+      .json({ message: 'Primary address delivery changed successfully' })
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal Server Error' })
   }
 }
 
@@ -308,4 +443,8 @@ module.exports = {
   editTelephoneNumber,
   addAddressDelivery,
   getAddresses,
+  deleteAddressDelivery,
+  editAddressDelivery,
+  editPrimaryAddressDelivery,
+  getAddressDeliveryById,
 }

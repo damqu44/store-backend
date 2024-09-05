@@ -63,9 +63,7 @@ model User {
   Gender                   Gender?
   BirthDate                DateTime?
   AddressDeliveries        AdressDelivery[]
-  InvoicesData             InvoiceData[]
   PrimaryAddressDeliveryId Int?
-  PrimaryInvoiceDataId     Int?
   Cart                     Cart?
   Orders                   Order[]
 }
@@ -87,26 +85,25 @@ model CartItem {
 }
 
 model AdressDelivery {
-  Id       Int     @id @default(autoincrement())
-  Name     String
-  LastName String
-  Street   String
-  City     String
-  ZipCode  String
-  UserId   Int
-  User     User    @relation(fields: [UserId], references: [Id])
-  Orders   Order[]
+  Id        Int     @id @default(autoincrement())
+  Name      String
+  LastName  String
+  Street    String
+  City      String
+  ZipCode   String
+  Telephone Int
+  UserId    Int
+  User      User    @relation(fields: [UserId], references: [Id])
+  Orders    Order[]
 }
 
-model InvoiceData {
+model Invoice {
   Id      Int     @id @default(autoincrement())
   Name    String
   Street  String
   City    String
   ZipCode String
   Nip     String?
-  UserId  Int
-  User    User    @relation(fields: [UserId], references: [Id])
   Orders  Order[]
 }
 
@@ -123,8 +120,8 @@ model Order {
   User             User           @relation(fields: [UserId], references: [Id])
   AdressDeliveryId Int
   AdressDelivery   AdressDelivery @relation(fields: [AdressDeliveryId], references: [Id])
-  InvoiceDataId    Int
-  InvoiceData      InvoiceData    @relation(fields: [InvoiceDataId], references: [Id])
+  InvoiceId        Int
+  Invoice          Invoice        @relation(fields: [InvoiceId], references: [Id])
   OrderItems       OrderItem[]
   OrderDate        DateTime       @default(now())
   TotalPrice       Decimal

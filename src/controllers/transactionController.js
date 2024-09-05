@@ -17,8 +17,9 @@ const getProducts = async (req, res) => {
       res.status(400).json({ error: 'No valid products found' })
     }
   } catch (error) {
-    console.error('Error verifying products:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal server error' })
   }
 }
 
@@ -51,7 +52,7 @@ const verifyProducts = async (products) => {
 
   const verifiedProducts = foundProducts.map((product) => {
     const cartProduct = products.find((p) => p.id === product.Id)
-    console.log(cartProduct)
+
     return {
       Id: product.Id,
       Name: product.Name,
@@ -67,7 +68,6 @@ const verifyProducts = async (products) => {
       })),
     }
   })
-  console.log(verifiedProducts)
 
   return verifiedProducts.filter((p) => p.IsAvailable)
 }
