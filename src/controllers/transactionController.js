@@ -1,6 +1,112 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
+getTransaction = async (req, res) => {
+  const { transactionData } = req.body
+
+  console.log(transactionData)
+
+  if (!transactionData.addressDeliveryId) {
+    res.status(500).json({ error: 'Address delivery was not provided' })
+  }
+
+  if (!transactionData.products || transactionData.products.length < 1) {
+    res.status(500).json({ error: 'products was not provided' })
+  }
+
+  if (!transactionData.deliveryMethodId) {
+    res.status(500).json({ error: 'Delivery method was not provided' })
+  }
+
+  if (!transactionData.paymentMethod) {
+    res.status(500).json({ error: 'Payment method was not provided' })
+  }
+
+  if (transactionData.invoiceData && !transactionData.invoiceData.fullName) {
+    res.status(500).json({ error: 'Invoice data was not provided' })
+  }
+
+  try {
+    const productIds = transactionData.products.map((product) => product.id)
+
+    // Pobierz szczegóły produktów z bazy danych
+    const products = await prisma.product.findMany({
+      where: { Id: { in: productIds } },
+    })
+
+    let totalPrice = 0
+    const orderItemsData = []
+
+    // Sprawdź ilość i oblicz całkowitą cenę
+    for (const product of transactionData.products) {
+      const dbProduct = products.find((p) => p.Id === product.id)
+      if (!dbProduct) {
+        return res
+          .status(500)
+          .json({ error: `Product with ID ${product.id} not found` })
+      }
+      if (dbProduct.Quantity < product.amount) {
+        return res.status(500).json({
+          error: `Insufficient stock for product with ID ${product.id}`,
+        })
+      }
+      totalPrice += dbProduct.Price * product.Amount
+
+      // Przygotuj dane dla OrderItems
+      orderItemsData.push({
+        ProductId: dbProduct.Id,
+        Quantity: product.Amount,
+        Price: dbProduct.Price,
+      })
+    }
+
+    let invoiceId = transactionData.invoiceData?.id
+
+    if (transactionData.invoiceData && !invoiceId) {
+      const invoice = await prisma.invoice.create({
+        data: {
+          Name: transactionData.invoiceData.fullName,
+          Street: transactionData.invoiceData.street,
+          City: transactionData.invoiceData.city,
+          ZipCode: transactionData.invoiceData.telephone,
+          Nip: transactionData.invoiceData.nip,
+        },
+      })
+      invoiceId = invoice.Id
+    }
+
+    const newOrder = await prisma.order.create({
+      data: {
+        UserId: req.userId,
+        AdressDeliveryId: transactionData.addressDeliveryId,
+        InvoiceId: invoiceId,
+        OrderItems: {
+          create: orderItemsData,
+        },
+        TotalPrice: totalPrice,
+        DeliveryMethodId: transactionData.deliveryMethodId,
+        Comment: transactionData.comment,
+        DiscountCode: transactionData.DiscountCode,
+      },
+    })
+
+    for (const product of transactionData.products) {
+      await prisma.product.update({
+        where: { Id: product.id },
+        data: { Quantity: { decrement: product.Amount } },
+      })
+    }
+
+    res
+      .status(200)
+      .json({ message: 'Order created successfully', order: newOrder })
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error.message, message: 'Internal server error' })
+  }
+}
+
 const getProducts = async (req, res) => {
   const { products } = req.body
 
@@ -74,4 +180,5 @@ const verifyProducts = async (products) => {
 
 module.exports = {
   getProducts,
+  getTransaction,
 }

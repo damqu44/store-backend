@@ -39,8 +39,6 @@ const getProducts = async (req, res) => {
         Category: true,
       },
     })
-
-    res.json(products)
   } catch (error) {
     res.status(500).json(error)
   }

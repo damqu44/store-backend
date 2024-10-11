@@ -100,9 +100,9 @@ model AdressDelivery {
 model Invoice {
   Id      Int     @id @default(autoincrement())
   Name    String
-  Street  String
-  City    String
-  ZipCode String
+  Street  String?
+  City    String?
+  ZipCode String?
   Nip     String?
   Orders  Order[]
 }
@@ -120,8 +120,8 @@ model Order {
   User             User           @relation(fields: [UserId], references: [Id])
   AdressDeliveryId Int
   AdressDelivery   AdressDelivery @relation(fields: [AdressDeliveryId], references: [Id])
-  InvoiceId        Int
-  Invoice          Invoice        @relation(fields: [InvoiceId], references: [Id])
+  InvoiceId        Int?
+  Invoice          Invoice?       @relation(fields: [InvoiceId], references: [Id])
   OrderItems       OrderItem[]
   OrderDate        DateTime       @default(now())
   TotalPrice       Decimal
