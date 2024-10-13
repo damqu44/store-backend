@@ -4,8 +4,6 @@ const prisma = new PrismaClient()
 getTransaction = async (req, res) => {
   const { transactionData } = req.body
 
-  console.log(transactionData)
-
   if (!transactionData.addressDeliveryId) {
     res.status(500).json({ error: 'Address delivery was not provided' })
   }
@@ -96,6 +94,20 @@ getTransaction = async (req, res) => {
         data: { Quantity: { decrement: product.Amount } },
       })
     }
+
+    await prisma.cartItem.deleteMany({
+      where: {
+        Cart: {
+          UserId: req.userId,
+        },
+      },
+    })
+
+    await prisma.cart.delete({
+      where: {
+        UserId: req.userId,
+      },
+    })
 
     res
       .status(200)

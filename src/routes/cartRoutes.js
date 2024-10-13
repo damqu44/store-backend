@@ -13,5 +13,6 @@ router.delete(
   cartController.removeFromDatabaseCart
 )
 router.delete('/cookies/:productId', cartController.removeFromCookiesCart)
+router.delete('/', verifyToken, cartController.deleteCart)
 
 module.exports = router

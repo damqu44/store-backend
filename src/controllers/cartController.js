@@ -243,6 +243,20 @@ const standardizeCartData = async (userId, cartData) => {
   return standardizedCartData
 }
 
+const deleteCart = async (req, res) => {
+  try {
+    await prisma.cart.delete({
+      where: {
+        UserId: req.UserId,
+      },
+    })
+
+    res.status(200).send({ message: 'Cart deleted' })
+  } catch (error) {
+    res.status(500).send({ message: 'Internal Server Error' })
+  }
+}
+
 module.exports = {
   addToDatabaseCart,
   addToCookiesCart,
@@ -250,4 +264,5 @@ module.exports = {
   getCookiesCart,
   removeFromCookiesCart,
   removeFromDatabaseCart,
+  deleteCart,
 }
