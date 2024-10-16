@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
+const { PrismaClient } = require("@prisma/client")
 const prisma = new PrismaClient()
 
 const getOrders = async (req, res) => {
@@ -8,18 +8,23 @@ const getOrders = async (req, res) => {
       include: {
         OrderItems: {
           include: {
-            Product: true,
+            Product: {
+              include: {
+                Images: {
+                  take: 1,
+                },
+              },
+            },
           },
         },
       },
     })
 
-    console.log(orders)
     res.status(200).json(orders)
   } catch (error) {
     res
       .status(500)
-      .json({ error: error.message, message: 'Internal server error' })
+      .json({ error: error.message, message: "Internal server error" })
   }
 }
 

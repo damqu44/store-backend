@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
+const { PrismaClient } = require("@prisma/client")
 const prisma = new PrismaClient()
 
 const addToDatabaseCart = async (req, res) => {
@@ -47,10 +47,9 @@ const addToDatabaseCart = async (req, res) => {
 
     cartData = await standardizeCartData(req.userId, cartData)
 
-    res.status(200).send({ message: 'Product data received', cartData })
+    res.status(200).send({ message: "Product data received", cartData })
   } catch (error) {
-    console.error('Error adding product to cart:', error)
-    res.status(500).send({ message: 'Internal Server Error' })
+    res.status(500).send({ message: "Internal Server Error" })
   }
 }
 
@@ -78,20 +77,19 @@ const addToCookiesCart = async (req, res) => {
       cartData.push({ Id, Amount })
     }
 
-    res.cookie('cart', JSON.stringify(cartData), {
+    res.cookie("cart", JSON.stringify(cartData), {
       httpOnly: false,
       secure: false,
-      sameSite: 'lax',
+      sameSite: "lax",
     })
 
     cartData = await standardizeCartData(req.userId, cartData)
 
     res
       .status(200)
-      .send({ message: 'Product added successfully to cookies cart', cartData })
+      .send({ message: "Product added successfully to cookies cart", cartData })
   } catch (error) {
-    console.error('Error adding product to cart:', error)
-    res.status(500).send({ message: 'Internal Server Error' })
+    res.status(500).send({ message: "Internal Server Error" })
   }
 }
 
@@ -105,8 +103,7 @@ const getCookiesCart = async (req, res) => {
 
     res.status(200).send({ message: cartData })
   } catch (error) {
-    console.error('Error getting cart data:', error)
-    res.status(500).send({ message: 'Internal Server Error' })
+    res.status(500).send({ message: "Internal Server Error" })
   }
 }
 const getDatabaseCart = async (req, res) => {
@@ -115,15 +112,18 @@ const getDatabaseCart = async (req, res) => {
 
     cartData = await prisma.cart.findUnique({
       where: { UserId: req.userId },
-      include: { CartItems: { include: { Product: true } } },
+      include: {
+        CartItems: {
+          include: { Product: { include: { Images: { take: 1 } } } },
+        },
+      },
     })
 
     cartData = await standardizeCartData(req.userId, cartData)
 
     res.status(200).send({ message: cartData })
   } catch (error) {
-    console.error('Error getting cart data:', error)
-    res.status(500).send({ message: 'Internal Server Error' })
+    res.status(500).send({ message: "Internal Server Error" })
   }
 }
 
@@ -140,19 +140,18 @@ const removeFromCookiesCart = async (req, res) => {
 
     const updatedCartData = cartData.filter((item) => item.Id !== productId)
 
-    res.cookie('cart', JSON.stringify(updatedCartData), {
+    res.cookie("cart", JSON.stringify(updatedCartData), {
       httpOnly: false,
       secure: false,
-      sameSite: 'lax',
+      sameSite: "lax",
     })
 
     cartData = updatedCartData
     cartData = await standardizeCartData(req.userId, cartData)
 
-    res.status(200).send({ message: 'Product removed from cart', cartData })
+    res.status(200).send({ message: "Product removed from cart", cartData })
   } catch (error) {
-    console.error('Error removing product from cart:', error)
-    res.status(500).send({ message: 'Internal Server Error' })
+    res.status(500).send({ message: "Internal Server Error" })
   }
 }
 const removeFromDatabaseCart = async (req, res) => {
@@ -175,18 +174,21 @@ const removeFromDatabaseCart = async (req, res) => {
 
       cartData = await prisma.cart.findUnique({
         where: { UserId: req.userId },
-        include: { CartItems: { include: { Product: true } } },
+        include: {
+          CartItems: {
+            include: { Product: { include: { Images: { take: 1 } } } },
+          },
+        },
       })
     } else {
-      res.status(404).send({ message: 'Cart not found' })
+      res.status(404).send({ message: "Cart not found" })
       return
     }
     cartData = await standardizeCartData(req.userId, cartData)
 
-    res.status(200).send({ message: 'Product removed from cart', cartData })
+    res.status(200).send({ message: "Product removed from cart", cartData })
   } catch (error) {
-    console.error('Error removing product from cart:', error)
-    res.status(500).send({ message: 'Internal Server Error' })
+    res.status(500).send({ message: "Internal Server Error" })
   }
 }
 
@@ -216,6 +218,7 @@ const standardizeCartData = async (userId, cartData) => {
     for (const productData of cartData) {
       const product = await prisma.product.findUnique({
         where: { Id: productData.Id },
+        include: { Images: { take: 1 } },
       })
 
       if (product) {
@@ -251,9 +254,9 @@ const deleteCart = async (req, res) => {
       },
     })
 
-    res.status(200).send({ message: 'Cart deleted' })
+    res.status(200).send({ message: "Cart deleted" })
   } catch (error) {
-    res.status(500).send({ message: 'Internal Server Error' })
+    res.status(500).send({ message: "Internal Server Error" })
   }
 }
 

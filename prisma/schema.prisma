@@ -20,15 +20,22 @@ model Product {
   Id          Int     @id @default(autoincrement())
   Name        String
   Quantity    Int
-  ImageLink   String
   Price       Decimal
-  Description String?
-  CategoryId  Int?
+  Description String @db.VarChar(3000)
+  CategoryId  Int
 
   DeliveryMethods Product_DeliveryMethods[]
   Category        Category?                 @relation(fields: [CategoryId], references: [Id])
   CartItem        CartItem[]
   OrderItems      OrderItem[]
+  Images          Image[]
+}
+
+model Image {
+  Id        Int     @id @default(autoincrement())
+  Url       String  
+  ProductId Int     
+  Product   Product @relation(fields: [ProductId], references: [Id])
 }
 
 model Product_DeliveryMethods {

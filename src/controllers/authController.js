@@ -1,8 +1,8 @@
-const { PrismaClient } = require('@prisma/client')
+const { PrismaClient } = require("@prisma/client")
 const prisma = new PrismaClient()
-const secret = 'your_jwt_secret'
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
+const secret = "your_jwt_secret"
+const bcrypt = require("bcrypt")
+const jwt = require("jsonwebtoken")
 
 const validateEmail = (email) => {
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -16,26 +16,19 @@ const validatePhoneNumber = (phone) => {
 
 const register = async (req, res) => {
   const { email, password, userName, userLastName, telephone } = req.body
-  console.log('Registering user:', {
-    email,
-    password,
-    userName,
-    userLastName,
-    telephone,
-  })
 
   if (!email || !password || !userName || !userLastName || !telephone) {
-    return res.status(400).json({ error: 'All fields are required' })
+    return res.status(400).json({ error: "All fields are required" })
   }
 
   if (!validateEmail(email)) {
-    return res.status(400).json({ error: 'Invalid email format' })
+    return res.status(400).json({ error: "Invalid email format" })
   }
 
   if (!validatePhoneNumber(telephone)) {
     return res
       .status(400)
-      .json({ error: 'Invalid phone number format. Must be 9 digits' })
+      .json({ error: "Invalid phone number format. Must be 9 digits" })
   }
 
   try {
@@ -44,7 +37,7 @@ const register = async (req, res) => {
     })
 
     if (existingEmail) {
-      return res.status(400).json({ error: 'Email already in use' })
+      return res.status(400).json({ error: "Email already in use" })
     }
 
     const existingPhone = await prisma.user.findUnique({
@@ -52,7 +45,7 @@ const register = async (req, res) => {
     })
 
     if (existingPhone) {
-      return res.status(400).json({ error: 'Phone number already in use' })
+      return res.status(400).json({ error: "Phone number already in use" })
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -67,7 +60,7 @@ const register = async (req, res) => {
       },
     })
 
-    res.status(201).json({ message: 'User created:', user })
+    res.status(201).json({ message: "User created:", user })
   } catch (error) {
     res.status(400).json({ error: error.message })
   }
@@ -81,23 +74,23 @@ const login = async (req, res) => {
   })
 
   if (user && (await bcrypt.compare(password, user.Password))) {
-    const token = jwt.sign({ userId: user.Id }, secret, { expiresIn: '1h' })
+    const token = jwt.sign({ userId: user.Id }, secret, { expiresIn: "1h" })
 
-    res.cookie('authToken', token, {
+    res.cookie("authToken", token, {
       httpOnly: false, // true - Zabezpieczenie przed dostępem z JavaScript
       // secure: process.env.NODE_ENV === 'production', // Tylko w HTTPS w produkcji
       maxAge: 3600000,
     })
 
-    res.json({ message: 'Logged in successfully' })
+    res.json({ message: "Logged in successfully" })
   } else {
-    res.status(401).json({ error: 'Invalid email or password' })
+    res.status(401).json({ error: "Invalid email or password" })
   }
 }
 
 const logout = (req, res) => {
-  res.clearCookie('authToken')
-  res.json({ message: 'Logged out successfully' })
+  res.clearCookie("authToken")
+  res.json({ message: "Logged out successfully" })
 }
 
 module.exports = {

@@ -1,27 +1,27 @@
-const { PrismaClient } = require('@prisma/client')
+const { PrismaClient } = require("@prisma/client")
 const prisma = new PrismaClient()
 
 getTransaction = async (req, res) => {
   const { transactionData } = req.body
 
   if (!transactionData.addressDeliveryId) {
-    res.status(500).json({ error: 'Address delivery was not provided' })
+    res.status(500).json({ error: "Address delivery was not provided" })
   }
 
   if (!transactionData.products || transactionData.products.length < 1) {
-    res.status(500).json({ error: 'products was not provided' })
+    res.status(500).json({ error: "products was not provided" })
   }
 
   if (!transactionData.deliveryMethodId) {
-    res.status(500).json({ error: 'Delivery method was not provided' })
+    res.status(500).json({ error: "Delivery method was not provided" })
   }
 
   if (!transactionData.paymentMethod) {
-    res.status(500).json({ error: 'Payment method was not provided' })
+    res.status(500).json({ error: "Payment method was not provided" })
   }
 
   if (transactionData.invoiceData && !transactionData.invoiceData.fullName) {
-    res.status(500).json({ error: 'Invoice data was not provided' })
+    res.status(500).json({ error: "Invoice data was not provided" })
   }
 
   try {
@@ -111,11 +111,11 @@ getTransaction = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: 'Order created successfully', order: newOrder })
+      .json({ message: "Order created successfully", order: newOrder })
   } catch (error) {
     res
       .status(500)
-      .json({ error: error.message, message: 'Internal server error' })
+      .json({ error: error.message, message: "Internal server error" })
   }
 }
 
@@ -123,7 +123,7 @@ const getProducts = async (req, res) => {
   const { products } = req.body
 
   if (!products || !Array.isArray(products)) {
-    return res.status(400).json({ error: 'Invalid cart data' })
+    return res.status(400).json({ error: "Invalid cart data" })
   }
 
   try {
@@ -132,18 +132,17 @@ const getProducts = async (req, res) => {
     if (verifiedProducts.length > 0) {
       res.status(200).json(verifiedProducts)
     } else {
-      res.status(400).json({ error: 'No valid products found' })
+      res.status(400).json({ error: "No valid products found" })
     }
   } catch (error) {
     res
       .status(500)
-      .json({ error: error.message, message: 'Internal server error' })
+      .json({ error: error.message, message: "Internal server error" })
   }
 }
 
 const verifyProducts = async (products) => {
   const productIds = products.map((p) => p.id).filter((id) => id !== undefined)
-
   const foundProducts = await prisma.product.findMany({
     where: {
       Id: { in: productIds },
@@ -153,7 +152,12 @@ const verifyProducts = async (products) => {
       Name: true,
       Quantity: true,
       Price: true,
-      ImageLink: true,
+      Images: {
+        select: {
+          Url: true,
+        },
+        take: 1,
+      },
       DeliveryMethods: {
         select: {
           DeliveryMethod: {
@@ -167,15 +171,13 @@ const verifyProducts = async (products) => {
       },
     },
   })
-
   const verifiedProducts = foundProducts.map((product) => {
     const cartProduct = products.find((p) => p.id === product.Id)
-
     return {
       Id: product.Id,
       Name: product.Name,
       Price: product.Price,
-      ImageLink: product.ImageLink,
+      ImageUrl: product.Images.length > 0 ? product.Images[0].Url : "",
       RequestedAmount: cartProduct ? cartProduct.amount : 0,
       AvailableAmount: product.Quantity,
       IsAvailable: cartProduct ? product.Quantity >= cartProduct.amount : false,

@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
+const { PrismaClient } = require("@prisma/client")
 const prisma = new PrismaClient()
 const getProducts = async (req, res) => {
   try {
@@ -14,31 +14,28 @@ const getProducts = async (req, res) => {
       if (categoryResult) {
         where.categoryId = categoryResult.Id
       } else {
-        return res.status(404).json({ error: 'Category not found' })
+        return res.status(404).json({ error: "Category not found" })
       }
     }
 
-    if (sort === 'price_asc') {
-      orderBy.Price = 'asc'
-    } else if (sort === 'price_desc') {
-      orderBy.Price = 'desc'
-    } else if (sort === 'random') {
+    if (sort === "price_asc") {
+      orderBy.Price = "asc"
+    } else if (sort === "price_desc") {
+      orderBy.Price = "desc"
+    } else if (sort === "random") {
       const products = await prisma.product.findMany({
-        where,
+        where: {
+          Quantity: {
+            gt: 0,
+          },
+        },
         include: {
           Category: true,
+          Images: true,
         },
       })
       return res.json(products.sort(() => 0.5 - Math.random()))
     }
-
-    const products = await prisma.product.findMany({
-      where,
-      orderBy,
-      include: {
-        Category: true,
-      },
-    })
   } catch (error) {
     res.status(500).json(error)
   }
@@ -56,6 +53,7 @@ const getProductById = async (req, res) => {
             DeliveryMethod: true,
           },
         },
+        Images: true,
       },
     })
     if (product) {
@@ -65,11 +63,10 @@ const getProductById = async (req, res) => {
       }
       res.json(transformedProduct)
     } else {
-      res.status(404).json({ error: 'Product not found' })
+      res.status(404).json({ error: "Product not found" })
     }
   } catch (error) {
-    console.error(`Error fetching product with ID ${id}:`, error)
-    res.status(500).json({ error: 'Internal Server Error' })
+    res.status(500).json({ error: "Internal Server Error" })
   }
 }
 

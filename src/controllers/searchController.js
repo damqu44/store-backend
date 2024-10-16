@@ -1,4 +1,4 @@
-const { PrismaClient, Prisma } = require('@prisma/client')
+const { PrismaClient, Prisma } = require("@prisma/client")
 const prisma = new PrismaClient()
 
 const getProducts = async (req, res) => {
@@ -6,11 +6,14 @@ const getProducts = async (req, res) => {
 
   try {
     if (!content) {
-      return res.status(400).send('Content not provided')
+      return res.status(400).send("Content not provided")
     }
 
     const products = await prisma.product.findMany({
       where: {
+        Quantity: {
+          gt: 0,
+        },
         OR: [
           { Name: { contains: content.toLowerCase() } },
           { Description: { contains: content.toLowerCase() } },
@@ -18,14 +21,14 @@ const getProducts = async (req, res) => {
       },
       include: {
         Category: true,
+        Images: true,
       },
-      orderBy: [{ Name: 'desc' }, { Description: 'desc' }],
+      orderBy: [{ Name: "desc" }, { Description: "desc" }],
     })
 
     res.json(products)
   } catch (error) {
-    console.error('Error fetching products:', error)
-    res.status(500).json({ error: 'Internal Server Error' })
+    res.status(500).json({ error: "Internal Server Error" })
   }
 }
 
