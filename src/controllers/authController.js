@@ -50,17 +50,44 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const user = await prisma.user.create({
-      data: {
-        Email: email,
-        Password: hashedPassword,
-        Name: userName,
-        LastName: userLastName,
-        Telephone: parseInt(telephone, 10),
-      },
+    const user = await prisma.$transaction(async (prisma) => {
+      const newUser = await prisma.user.create({
+        data: {
+          Email: email,
+          Password: hashedPassword,
+          Name: userName,
+          LastName: userLastName,
+          Telephone: parseInt(telephone, 10),
+        },
+      })
+
+      const cart = req.cookies.cart ? JSON.parse(req.cookies.cart) : null
+      if (cart && cart.CartItems && cart.CartItems.length > 0) {
+        const newCart = await prisma.cart.create({
+          data: {
+            User: {
+              connect: { Id: newUser.Id },
+            },
+          },
+        })
+
+        const cartItemsData = cart.CartItems.map((item) => ({
+          CartId: newCart.Id,
+          ProductId: item.ProductId,
+          Amount: item.Amount,
+        }))
+
+        await prisma.cartItem.createMany({
+          data: cartItemsData,
+        })
+
+        res.clearCookie("cart")
+      }
+
+      return newUser
     })
 
-    res.status(201).json({ message: "User created:", user })
+    res.status(200).json({ message: "User created:", user })
   } catch (error) {
     res.status(400).json({ error: error.message })
   }

@@ -1,177 +1,91 @@
 const { PrismaClient } = require("@prisma/client")
 const prisma = new PrismaClient()
 
-const addToDatabaseCart = async (req, res) => {
+const addToCart = async (req, res) => {
   try {
     const { Id, Amount, isUpdate } = req.body
-
     let cartData = []
 
     if (req.userId) {
-      let cart = await prisma.cart.findUnique({
-        where: { UserId: req.userId },
-        include: { CartItems: true },
+      const cart = await prisma.$transaction(async (prisma) => {
+        let cart = await prisma.cart.findUnique({
+          where: { UserId: req.userId },
+          include: { CartItems: true },
+        })
+
+        if (!cart) {
+          cart = await prisma.cart.create({
+            data: { UserId: req.userId },
+          })
+        }
+
+        const existingCartItem = cart.CartItems.find(
+          (item) => item.ProductId === Id
+        )
+
+        if (existingCartItem) {
+          await prisma.cartItem.update({
+            where: { Id: existingCartItem.Id },
+            data: {
+              Amount: isUpdate ? Amount : existingCartItem.Amount + Amount,
+            },
+          })
+        } else {
+          await prisma.cartItem.create({
+            data: {
+              CartId: cart.Id,
+              ProductId: Id,
+              Amount: Amount,
+            },
+          })
+        }
+
+        return await prisma.cart.findUnique({
+          where: { UserId: req.userId },
+          include: { CartItems: { include: { Product: true } } },
+        })
       })
 
-      if (!cart) {
-        cart = await prisma.cart.create({
-          data: { UserId: req.userId },
-        })
-      }
-
-      const cartItems = cart.CartItems || []
-      const existingCartItem = cartItems.find((item) => item.ProductId === Id)
-
-      if (existingCartItem) {
-        await prisma.cartItem.update({
-          where: { Id: existingCartItem.Id },
-          data: {
-            Amount: isUpdate ? Amount : existingCartItem.Amount + Amount,
-          },
-        })
-      } else {
-        await prisma.cartItem.create({
-          data: {
-            CartId: cart.Id,
-            ProductId: Id,
-            Amount: Amount,
-          },
-        })
-      }
-
-      cartData = await prisma.cart.findUnique({
-        where: { UserId: req.userId },
-        include: { CartItems: { include: { Product: true } } },
-      })
-    }
-
-    cartData = await standardizeCartData(req.userId, cartData)
-
-    res.status(200).send({ message: "Product data received", cartData })
-  } catch (error) {
-    res.status(500).send({ message: "Internal Server Error" })
-  }
-}
-
-const addToCookiesCart = async (req, res) => {
-  try {
-    const { Id, Amount, isUpdate } = req.body
-
-    let cartData = []
-
-    cartData = req.cookies.cart ? JSON.parse(req.cookies.cart) : []
-
-    if (!Array.isArray(cartData)) {
-      cartData = []
-    }
-
-    const existingProductIndex = cartData.findIndex((item) => item.Id === Id)
-
-    if (existingProductIndex !== -1) {
-      if (isUpdate) {
-        cartData[existingProductIndex].Amount = Amount
-      } else {
-        cartData[existingProductIndex].Amount += Amount
-      }
+      cartData = cart
     } else {
-      cartData.push({ Id, Amount })
+      cartData = req.cookies.cart
+        ? JSON.parse(req.cookies.cart)
+        : { CartItems: [] }
+
+      const existingProductIndex = cartData.CartItems.findIndex(
+        (item) => item.ProductId === Id
+      )
+
+      if (existingProductIndex !== -1) {
+        if (isUpdate) {
+          cartData.CartItems[existingProductIndex].Amount = Amount
+        } else {
+          cartData.CartItems[existingProductIndex].Amount += Amount
+        }
+      } else {
+        cartData.CartItems.push({ ProductId: Id, Amount: Amount })
+      }
+
+      res.cookie("cart", JSON.stringify(cartData), {
+        httpOnly: false,
+        secure: false,
+        sameSite: "lax",
+      })
     }
 
-    res.cookie("cart", JSON.stringify(cartData), {
-      httpOnly: false,
-      secure: false,
-      sameSite: "lax",
-    })
-
-    cartData = await standardizeCartData(req.userId, cartData)
-
+    const standardizedData = await standardizeCartData(req.userId, cartData)
     res
       .status(200)
-      .send({ message: "Product added successfully to cookies cart", cartData })
+      .send({ message: "Product data received", cartData: standardizedData })
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error" })
   }
 }
 
-const getCookiesCart = async (req, res) => {
+const getCart = async (req, res) => {
   try {
     let cartData = []
-
-    cartData = req.cookies.cart ? JSON.parse(req.cookies.cart) : []
-
-    cartData = await standardizeCartData(req.userId, cartData)
-
-    res.status(200).send({ message: cartData })
-  } catch (error) {
-    res.status(500).send({ message: "Internal Server Error" })
-  }
-}
-const getDatabaseCart = async (req, res) => {
-  try {
-    let cartData = []
-
-    cartData = await prisma.cart.findUnique({
-      where: { UserId: req.userId },
-      include: {
-        CartItems: {
-          include: { Product: { include: { Images: { take: 1 } } } },
-        },
-      },
-    })
-
-    cartData = await standardizeCartData(req.userId, cartData)
-
-    res.status(200).send({ message: cartData })
-  } catch (error) {
-    res.status(500).send({ message: "Internal Server Error" })
-  }
-}
-
-const removeFromCookiesCart = async (req, res) => {
-  try {
-    const productId = parseInt(req.params.productId, 10)
-    let cartData = []
-
-    cartData = req.cookies.cart ? JSON.parse(req.cookies.cart) : []
-
-    if (!Array.isArray(cartData)) {
-      cartData = []
-    }
-
-    const updatedCartData = cartData.filter((item) => item.Id !== productId)
-
-    res.cookie("cart", JSON.stringify(updatedCartData), {
-      httpOnly: false,
-      secure: false,
-      sameSite: "lax",
-    })
-
-    cartData = updatedCartData
-    cartData = await standardizeCartData(req.userId, cartData)
-
-    res.status(200).send({ message: "Product removed from cart", cartData })
-  } catch (error) {
-    res.status(500).send({ message: "Internal Server Error" })
-  }
-}
-const removeFromDatabaseCart = async (req, res) => {
-  try {
-    const productId = parseInt(req.params.productId, 10)
-    let cartData = []
-
-    const cart = await prisma.cart.findUnique({
-      where: { UserId: req.userId },
-      include: { CartItems: true },
-    })
-
-    if (cart) {
-      await prisma.cartItem.deleteMany({
-        where: {
-          CartId: cart.Id,
-          ProductId: productId,
-        },
-      })
-
+    if (req.userId) {
       cartData = await prisma.cart.findUnique({
         where: { UserId: req.userId },
         include: {
@@ -181,12 +95,77 @@ const removeFromDatabaseCart = async (req, res) => {
         },
       })
     } else {
-      res.status(404).send({ message: "Cart not found" })
-      return
+      cartData = req.cookies.cart
+        ? JSON.parse(req.cookies.cart)
+        : { CartItems: [] }
     }
-    cartData = await standardizeCartData(req.userId, cartData)
+    const standardizedData = await standardizeCartData(req.userId, cartData)
 
-    res.status(200).send({ message: "Product removed from cart", cartData })
+    res
+      .status(200)
+      .send({ message: "Cart data retrieved", cartData: standardizedData })
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error" })
+  }
+}
+
+const removeFromCart = async (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId, 10)
+    let cartData = []
+
+    if (req.userId) {
+      const cart = await prisma.$transaction(async (prisma) => {
+        const cart = await prisma.cart.findUnique({
+          where: { UserId: req.userId },
+          include: { CartItems: true },
+        })
+
+        if (cart) {
+          await prisma.cartItem.deleteMany({
+            where: {
+              CartId: cart.Id,
+              ProductId: productId,
+            },
+          })
+
+          return await prisma.cart.findUnique({
+            where: { UserId: req.userId },
+            include: {
+              CartItems: {
+                include: { Product: { include: { Images: { take: 1 } } } },
+              },
+            },
+          })
+        } else {
+          res.status(404).send({ message: "Cart not found" })
+          return
+        }
+      })
+
+      if (cart) {
+        cartData = cart
+      }
+    } else {
+      cartData = req.cookies.cart
+        ? JSON.parse(req.cookies.cart)
+        : { CartItems: [] }
+      cartData.CartItems = cartData.CartItems.filter(
+        (item) => item.ProductId !== productId
+      )
+
+      res.cookie("cart", JSON.stringify(cartData), {
+        httpOnly: false,
+        secure: false,
+        sameSite: "lax",
+      })
+    }
+
+    const standardizedData = await standardizeCartData(req.userId, cartData)
+    res.status(200).send({
+      message: "Product removed from cart",
+      cartData: standardizedData,
+    })
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error" })
   }
@@ -196,35 +175,47 @@ const standardizeCartData = async (userId, cartData) => {
   let standardizedCartData = []
 
   if (userId) {
-    standardizedCartData = await Promise.all(
-      cartData.CartItems.map(async (item) => {
-        const deliveryMethods = await prisma.product_DeliveryMethods.findMany({
-          where: { ProductId: item.Product.Id },
-          include: { DeliveryMethod: true },
-        })
+    if (cartData && cartData.CartItems.length > 0) {
+      standardizedCartData = await Promise.all(
+        cartData.CartItems.map(async (item) => {
+          const deliveryMethods = await prisma.product_DeliveryMethods.findMany(
+            {
+              where: { ProductId: item.Product.Id },
+              include: { DeliveryMethod: true },
+            }
+          )
 
-        return {
-          ...item.Product,
-          cartInfo: {
-            Amount: item.Amount,
-            Id: item.Id,
-            CartId: item.CartId,
-          },
-          deliveryMethods: deliveryMethods.map((dm) => dm.DeliveryMethod),
-        }
-      })
-    )
+          const availableQuantity = item.Product.Quantity
+          if (item.Amount > availableQuantity) {
+            item.Amount = availableQuantity
+          }
+
+          return {
+            ...item.Product,
+            cartInfo: {
+              Amount: item.Amount,
+              Id: item.Id,
+              CartId: item.CartId,
+            },
+            deliveryMethods: deliveryMethods.map((dm) => dm.DeliveryMethod),
+          }
+        })
+      )
+    } else {
+      return {
+        cartInfo: [],
+      }
+    }
   } else {
-    for (const productData of cartData) {
+    for (const item of cartData.CartItems) {
       const product = await prisma.product.findUnique({
-        where: { Id: productData.Id },
+        where: { Id: item.ProductId },
         include: { Images: { take: 1 } },
       })
-
       if (product) {
         const availableQuantity = product.Quantity
-        if (productData.Amount > availableQuantity) {
-          productData.Amount = availableQuantity
+        if (item.Amount > availableQuantity) {
+          item.Amount = availableQuantity
         }
         const deliveryMethods = await prisma.product_DeliveryMethods.findMany({
           where: { ProductId: product.Id },
@@ -234,8 +225,8 @@ const standardizeCartData = async (userId, cartData) => {
         standardizedCartData.push({
           ...product,
           cartInfo: {
-            Amount: productData.Amount,
-            Id: productData.Id,
+            Amount: item.Amount,
+            Id: null,
             CartId: null,
           },
           deliveryMethods: deliveryMethods.map((dm) => dm.DeliveryMethod),
@@ -248,12 +239,31 @@ const standardizeCartData = async (userId, cartData) => {
 
 const deleteCart = async (req, res) => {
   try {
-    await prisma.cart.delete({
-      where: {
-        UserId: req.UserId,
-      },
-    })
+    if (req.userId) {
+      await prisma.$transaction(async (prisma) => {
+        const cart = await prisma.cart.findUnique({
+          where: {
+            UserId: req.userId,
+          },
+        })
 
+        if (cart) {
+          await prisma.cartItem.deleteMany({
+            where: {
+              CartId: cart.Id,
+            },
+          })
+
+          await prisma.cart.delete({
+            where: {
+              UserId: req.userId,
+            },
+          })
+        }
+      })
+    } else {
+      res.clearCookie("cart")
+    }
     res.status(200).send({ message: "Cart deleted" })
   } catch (error) {
     res.status(500).send({ message: "Internal Server Error" })
@@ -261,11 +271,8 @@ const deleteCart = async (req, res) => {
 }
 
 module.exports = {
-  addToDatabaseCart,
-  addToCookiesCart,
-  getDatabaseCart,
-  getCookiesCart,
-  removeFromCookiesCart,
-  removeFromDatabaseCart,
+  addToCart,
+  getCart,
+  removeFromCart,
   deleteCart,
 }

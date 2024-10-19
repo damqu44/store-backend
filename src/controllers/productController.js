@@ -34,7 +34,7 @@ const getProducts = async (req, res) => {
           Images: true,
         },
       })
-      return res.json(products.sort(() => 0.5 - Math.random()))
+      return res.status(200).json(products.sort(() => 0.5 - Math.random()))
     }
   } catch (error) {
     res.status(500).json(error)
@@ -61,9 +61,29 @@ const getProductById = async (req, res) => {
         ...product,
         DeliveryMethods: product.DeliveryMethods.map((dm) => dm.DeliveryMethod),
       }
-      res.json(transformedProduct)
+      res.status(200).json(transformedProduct)
     } else {
       res.status(404).json({ error: "Product not found" })
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" })
+  }
+}
+
+const getProductsByIds = async (req, res) => {
+  const { productsIds } = req.body
+  console.log(productsIds)
+
+  try {
+    const productsData = await prisma.product.findMany({
+      where: { Id: { in: productsIds } },
+      select: { Id: true, Quantity: true },
+    })
+
+    if (productsData) {
+      res.status(200).json(productsData)
+    } else {
+      res.status(404).json({ error: "Products not found" })
     }
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" })
@@ -73,4 +93,5 @@ const getProductById = async (req, res) => {
 module.exports = {
   getProducts,
   getProductById,
+  getProductsByIds,
 }

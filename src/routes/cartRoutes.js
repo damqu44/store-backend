@@ -1,18 +1,15 @@
-const express = require('express')
+const express = require("express")
 const router = express.Router()
-const cartController = require('../controllers/cartController')
-const verifyToken = require('../middleware/authMiddleware')
+const cartController = require("../controllers/cartController")
+const verifyToken = require("../middleware/authMiddleware")
 
-router.post('/database', verifyToken, cartController.addToDatabaseCart)
-router.post('/cookies', cartController.addToCookiesCart)
-router.get('/database', verifyToken, cartController.getDatabaseCart)
-router.get('/cookies', cartController.getCookiesCart)
-router.delete(
-  '/database/:productId',
-  verifyToken,
-  cartController.removeFromDatabaseCart
-)
-router.delete('/cookies/:productId', cartController.removeFromCookiesCart)
-router.delete('/', verifyToken, cartController.deleteCart)
+router.post("/", verifyToken, cartController.addToCart)
+router.get("/", verifyToken, cartController.getCart)
+router.delete("/:productId", verifyToken, cartController.removeFromCart) // Usuwanie produktu z koszyka dla zalogowanych
+router.delete("/", verifyToken, cartController.deleteCart) // Usuwanie całego koszyka dla zalogowanych
+
+router.post("/cookies", cartController.addToCart) // Dodawanie do koszyka dla niezalogowanych
+router.get("/cookies", cartController.getCart) // Pobieranie koszyka dla niezalogowanych
+router.delete("/cookies/:productId", cartController.removeFromCart) // Usuwanie produktu z koszyka dla niezalogowanych
 
 module.exports = router
