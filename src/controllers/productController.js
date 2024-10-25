@@ -72,7 +72,6 @@ const getProductById = async (req, res) => {
 
 const getProductsByIds = async (req, res) => {
   const { productsIds } = req.body
-  console.log(productsIds)
 
   try {
     const productsData = await prisma.product.findMany({
