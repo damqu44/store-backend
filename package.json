@@ -2,9 +2,10 @@
   "name": "store-backend",
   "version": "1.0.0",
   "main": "./src/server.js",
-  "scripts": {
-    "start": "npm run prisma:generate && node src/server.js",
-    "dev": "nodemon server.js"
+ "scripts": {
+  "start": "npm run prisma:generate && node src/server.js",
+  "dev": "nodemon src/server.js",
+  "prisma:generate": "prisma generate"
   },
   "keywords": [],
   "author": "",
