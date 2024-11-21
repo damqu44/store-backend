@@ -2,10 +2,10 @@
   "name": "store-backend",
   "version": "1.0.0",
   "main": "./src/server.js",
- "scripts": {
-  "prisma:generate": "npx prisma generate",
-  "start": "npm run prisma:generate && node src/server.js", 
-  "dev": "nodemon src/server.js"
+  "scripts": {
+    "prisma:generate": "npx prisma generate",
+    "start": "npm run prisma:generate && node src/server.js",
+    "dev": "nodemon src/server.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +21,7 @@
     "express-session": "^1.18.0",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
+    "prisma": "^5.20.0",
     "store-backend": "file:",
     "uuid": "^10.0.0"
   },
