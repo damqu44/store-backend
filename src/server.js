@@ -13,7 +13,7 @@ const authRoutes = require("./routes/authRoutes")
 const userRoutes = require("./routes/userRoutes")
 
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000
 
 app.use(customCors)
 app.use(express.json())
