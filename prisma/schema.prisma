@@ -21,7 +21,7 @@ model Product {
   Name        String
   Quantity    Int
   Price       Decimal
-  Description String @db.VarChar(3000)
+  Description String  @db.VarChar(3000)
   CategoryId  Int
 
   DeliveryMethods Product_DeliveryMethods[]
@@ -33,8 +33,8 @@ model Product {
 
 model Image {
   Id        Int     @id @default(autoincrement())
-  Url       String  
-  ProductId Int     
+  Url       String
+  ProductId Int
   Product   Product @relation(fields: [ProductId], references: [Id])
 }
 

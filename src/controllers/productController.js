@@ -14,7 +14,7 @@ const getProducts = async (req, res) => {
       if (categoryResult) {
         where.categoryId = categoryResult.Id
       } else {
-        return res.status(404).json({ error: "Category not found" })
+        return res.status(404).json({ error: "Category not found " })
       }
     }
 
