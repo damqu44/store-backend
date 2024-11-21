@@ -6,7 +6,7 @@ const getCategories = async (req, res) => {
     const categories = await prisma.category.findMany()
     res.json(categories)
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" })
+    res.status(500).json({ message: "Internal Server Error", error: error })
   }
 }
 

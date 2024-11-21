@@ -11,6 +11,8 @@ const transactionRoutes = require("./routes/transactionRoutes")
 const orderRoutes = require("./routes/orderRoutes")
 const authRoutes = require("./routes/authRoutes")
 const userRoutes = require("./routes/userRoutes")
+require("dotenv").config()
+const secretKey = process.env.JWT_SECRET
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -21,7 +23,7 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(
   session({
-    secret: "secretKey",
+    secret: secretKey,
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false, httpOnly: false, sameSite: "lax" },
@@ -54,5 +56,5 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`)
+  console.log(`Example app listening on port ${port}`)
 })
