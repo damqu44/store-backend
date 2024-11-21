@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client")
 const prisma = new PrismaClient()
-const secret = "your_jwt_secret"
+require("dotenv").config()
+const secret = process.env.JWT_SECRET
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 
