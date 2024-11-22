@@ -1,7 +1,7 @@
 const express = require("express")
-const { testPrismaConnection } = require("../controllers/prismaController")
 const router = express.Router()
+const prismaController = require("../controllers/prismaController")
 
-router.get("/test-connection", testPrismaConnection)
+router.get("/", prismaController.testPrismaConnection)
 
 module.exports = router
