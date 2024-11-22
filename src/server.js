@@ -11,6 +11,7 @@ const transactionRoutes = require("./routes/transactionRoutes")
 const orderRoutes = require("./routes/orderRoutes")
 const authRoutes = require("./routes/authRoutes")
 const userRoutes = require("./routes/userRoutes")
+const prismaRoutes = require("./routes/prismaRoutes")
 require("dotenv").config()
 const secretKey = process.env.JWT_SECRET
 
@@ -40,6 +41,7 @@ app.use("/transaction", transactionRoutes)
 app.use("/order", orderRoutes)
 app.use("/search", searchRoutes)
 app.use("/user", userRoutes)
+app.use("/test-connection", prismaRoutes)
 
 app.get("/product", (req, res) => {
   const { id } = req.query

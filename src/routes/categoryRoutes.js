@@ -1,7 +1,7 @@
-const express = require('express')
+const express = require("express")
 const router = express.Router()
-const categoryController = require('../controllers/categoryController')
+const categoryController = require("../controllers/categoryController").default
 
-router.get('/', categoryController.getCategories)
+router.get("/", categoryController.getCategories)
 
 module.exports = router
