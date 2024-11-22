@@ -1,3 +1,6 @@
+const { PrismaClient } = require("@prisma/client")
+const prisma = new PrismaClient()
+
 const testPrismaConnection = async (req, res) => {
   try {
     await prisma.$connect()
