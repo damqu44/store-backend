@@ -5,8 +5,8 @@
       "src": "package.json",
       "use": "@vercel/node",
       "config": {
-        "buildCommand": "prisma generate && npm run build"
-      }
+        "buildCommand": "npx prisma generate && npm run build"
+       }
     }
     ],
     "routes": [
