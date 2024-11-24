@@ -16,7 +16,6 @@ require("dotenv").config()
 const secretKey = process.env.JWT_SECRET
 
 const app = express()
-const port = process.env.PORT || 3000
 
 app.use(customCors)
 app.use(express.json())
@@ -57,6 +56,4 @@ app.use((err, req, res, next) => {
   res.status(500).send("Something broke!")
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+module.exports = app
