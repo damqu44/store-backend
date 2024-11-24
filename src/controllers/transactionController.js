@@ -28,7 +28,6 @@ const getTransaction = async (req, res) => {
   try {
     const productIds = transactionData.products.map((product) => product.id)
     console.log(productIds)
-    // Pobierz szczegóły produktów z bazy danych
     const products = await prisma.product.findMany({
       where: { Id: { in: productIds } },
     })
@@ -36,7 +35,6 @@ const getTransaction = async (req, res) => {
     let totalPrice = 0
     const orderItemsData = []
 
-    // Sprawdź ilość i oblicz całkowitą cenę
     for (const product of transactionData.products) {
       const dbProduct = products.find((p) => p.Id === product.id)
       if (!dbProduct) {
