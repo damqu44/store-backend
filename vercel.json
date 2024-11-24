@@ -2,11 +2,8 @@
     "version": 2,
     "builds": [
       {
-        "src": "package.json",
-        "use": "@vercel/node",
-        "config": {
-          "buildCommand": "npm run postinstall && npm run build"
-        }
+        "src": "src/server.js",
+        "use": "@vercel/node"
       }
     ],
     "routes": [

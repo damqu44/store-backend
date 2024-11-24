@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client")
 const { connect } = require("../routes/productRoutes")
 const prisma = new PrismaClient()
 
-getTransaction = async (req, res) => {
+const getTransaction = async (req, res) => {
   const { transactionData } = req.body
 
   if (!transactionData.addressDeliveryId) {
