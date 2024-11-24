@@ -78,7 +78,7 @@ const register = async (req, res) => {
           Amount: item.Amount,
         }))
 
-        await prisma.cartItem.createMany({
+        await prisma.cart_item.createMany({
           data: cartItemsData,
         })
 
@@ -100,7 +100,6 @@ const login = async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { Email: email },
   })
-
   if (user && (await bcrypt.compare(password, user.Password))) {
     const token = jwt.sign({ userId: user.Id }, secret, { expiresIn: "1h" })
 

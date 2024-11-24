@@ -7,91 +7,109 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model DeliveryMethod {
+model delivery_method {
   Id    Int     @id @default(autoincrement())
   Name  String
   Price Decimal
 
-  Product Product_DeliveryMethods[]
-  Order   Order[]
+  Product product_delivery_methods[]
+  Order   order[]
+
+  @@map("delivery_method")
 }
 
-model Product {
+model product {
   Id          Int     @id @default(autoincrement())
   Name        String
   Quantity    Int
   Price       Decimal
   Description String  @db.VarChar(3000)
   CategoryId  Int
+  Active      Boolean @default(true)
 
-  DeliveryMethods Product_DeliveryMethods[]
-  Category        Category?                 @relation(fields: [CategoryId], references: [Id])
-  CartItem        CartItem[]
-  OrderItems      OrderItem[]
-  Images          Image[]
+  DeliveryMethods product_delivery_methods[]
+  Category        category?                  @relation(fields: [CategoryId], references: [Id])
+  CartItem        cart_item[]
+  OrderItems      order_item[]
+  Images          image[]
+
+  @@map("product")
 }
 
-model Image {
+model image {
   Id        Int     @id @default(autoincrement())
   Url       String
   ProductId Int
-  Product   Product @relation(fields: [ProductId], references: [Id])
+  Product   product @relation(fields: [ProductId], references: [Id])
+
+  @@map("image")
 }
 
-model Product_DeliveryMethods {
+model product_delivery_methods {
   ProductId        Int
   DeliveryMethodId Int
 
-  Product        Product        @relation(fields: [ProductId], references: [Id])
-  DeliveryMethod DeliveryMethod @relation(fields: [DeliveryMethodId], references: [Id])
+  Product        product         @relation(fields: [ProductId], references: [Id])
+  DeliveryMethod delivery_method @relation(fields: [DeliveryMethodId], references: [Id])
 
   @@id([ProductId, DeliveryMethodId])
+  @@map("product_delivery_methods")
 }
 
-model Category {
+model category {
   Id   Int    @id @default(autoincrement())
   Name String
 
-  Products Product[]
+  Products product[]
+
+  @@map("category")
 }
 
-enum Gender {
+enum gender {
   MAN
   FEMALE
+
+  @@map("gender")
 }
 
-model User {
-  Id                       Int              @id @default(autoincrement())
+model user {
+  Id                       Int                @id @default(autoincrement())
   Name                     String
   LastName                 String
-  Email                    String           @unique
-  Telephone                Int              @unique
+  Email                    String             @unique
+  Telephone                Int                @unique
   Password                 String
-  Gender                   Gender?
+  Gender                   gender?
   BirthDate                DateTime?
-  AddressDeliveries        AdressDelivery[]
+  AddressDeliveries        address_delivery[]
   PrimaryAddressDeliveryId Int?
-  Cart                     Cart?
-  Orders                   Order[]
+  Cart                     cart?
+  Orders                   order[]
+
+  @@map("user")
 }
 
-model Cart {
-  Id        Int        @id @default(autoincrement())
-  UserId    Int        @unique
-  User      User       @relation(fields: [UserId], references: [Id])
-  CartItems CartItem[]
+model cart {
+  Id        Int         @id @default(autoincrement())
+  UserId    Int         @unique
+  User      user        @relation(fields: [UserId], references: [Id])
+  CartItems cart_item[]
+
+  @@map("cart")
 }
 
-model CartItem {
+model cart_item {
   Id        Int     @id @default(autoincrement())
   CartId    Int
-  Cart      Cart    @relation(fields: [CartId], references: [Id])
+  Cart      cart    @relation(fields: [CartId], references: [Id])
   ProductId Int
-  Product   Product @relation(fields: [ProductId], references: [Id])
+  Product   product @relation(fields: [ProductId], references: [Id])
   Amount    Int
+
+  @@map("cart_item")
 }
 
-model AdressDelivery {
+model address_delivery {
   Id        Int     @id @default(autoincrement())
   Name      String
   LastName  String
@@ -100,54 +118,64 @@ model AdressDelivery {
   ZipCode   String
   Telephone Int
   UserId    Int
-  User      User    @relation(fields: [UserId], references: [Id])
-  Orders    Order[]
+  User      user    @relation(fields: [UserId], references: [Id])
+  Orders    order[]
+
+  @@map("address_delivery")
 }
 
-model Invoice {
+model invoice {
   Id      Int     @id @default(autoincrement())
   Name    String
   Street  String?
   City    String?
   ZipCode String?
   Nip     String?
-  Orders  Order[]
+  Orders  order[]
+
+  @@map("invoice")
 }
 
-enum OrderStatus {
+enum order_status {
   PENDING
   SHIPPED
   DELIVERED
   CANCELLED
+
+  @@map("order_status")
 }
 
-model Order {
-  Id               Int            @id @default(autoincrement())
-  UserId           Int
-  User             User           @relation(fields: [UserId], references: [Id])
-  AdressDeliveryId Int
-  AdressDelivery   AdressDelivery @relation(fields: [AdressDeliveryId], references: [Id])
-  InvoiceId        Int?
-  Invoice          Invoice?       @relation(fields: [InvoiceId], references: [Id])
-  OrderItems       OrderItem[]
-  OrderDate        DateTime       @default(now())
-  TotalPrice       Decimal
-  DeliveryMethodId Int
-  DeliveryMethod   DeliveryMethod @relation(fields: [DeliveryMethodId], references: [Id])
-  Status           OrderStatus    @default(PENDING)
-  IsPaid           Boolean        @default(false)
-  Comment          String?
-  DiscountCode     String?
+model order {
+  Id                Int              @id @default(autoincrement())
+  UserId            Int
+  User              user             @relation(fields: [UserId], references: [Id])
+  AddressDeliveryId Int
+  AddressDelivery   address_delivery @relation(fields: [AddressDeliveryId], references: [Id])
+  InvoiceId         Int?
+  Invoice           invoice?         @relation(fields: [InvoiceId], references: [Id])
+  OrderItems        order_item[]
+  OrderDate         DateTime         @default(now())
+  TotalPrice        Decimal
+  DeliveryMethodId  Int
+  DeliveryMethod    delivery_method  @relation(fields: [DeliveryMethodId], references: [Id])
+  Status            order_status     @default(PENDING)
+  IsPaid            Boolean          @default(false)
+  Comment           String?
+  DiscountCode      String?
+
+  @@map("order")
 }
 
-model OrderItem {
+model order_item {
   Id        Int     @id @default(autoincrement())
   OrderId   Int
-  Order     Order   @relation(fields: [OrderId], references: [Id])
+  Order     order   @relation(fields: [OrderId], references: [Id])
   ProductId Int
-  Product   Product @relation(fields: [ProductId], references: [Id])
+  Product   product @relation(fields: [ProductId], references: [Id])
   Quantity  Int
   Price     Decimal
+
+  @@map("order_item")
 }
 
 //npx prisma migrate dev --name update-schema

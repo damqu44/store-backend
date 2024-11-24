@@ -21,6 +21,7 @@
     "express-session": "^1.18.0",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
+    "mysql2": "^3.11.4",
     "prisma": "^5.20.0",
     "store-backend": "file:",
     "uuid": "^10.0.0"

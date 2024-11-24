@@ -1,4 +1,0 @@
--- AlterTable
-ALTER TABLE `invoice` MODIFY `Street` VARCHAR(191) NULL,
-    MODIFY `City` VARCHAR(191) NULL,
-    MODIFY `ZipCode` VARCHAR(191) NULL;

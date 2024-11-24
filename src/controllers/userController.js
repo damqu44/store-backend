@@ -31,7 +31,7 @@ const getInfo = async (req, res) => {
 
 const getAddresses = async (req, res) => {
   try {
-    const addresses = await prisma.adressDelivery.findMany({
+    const addresses = await prisma.address_delivery.findMany({
       where: { UserId: req.userId },
     })
 
@@ -108,7 +108,7 @@ const getAddressDeliveryById = async (req, res) => {
       })
     }
 
-    const addressDelivery = await prisma.adressDelivery.findUnique({
+    const addressDelivery = await prisma.address_delivery.findUnique({
       where: { Id: addressId },
     })
     res.json(addressDelivery)
@@ -264,7 +264,7 @@ const addAddressDelivery = async (req, res) => {
       return res.status(400).json({ error: "All fields are required" })
     }
 
-    const existingAddressCount = await prisma.adressDelivery.count({
+    const existingAddressCount = await prisma.address_delivery.count({
       where: { UserId: req.userId },
     })
 
@@ -292,7 +292,7 @@ const addAddressDelivery = async (req, res) => {
       }
     }
 
-    await prisma.adressDelivery.create({
+    await prisma.address_delivery.create({
       data: {
         Name: name,
         LastName: lastName,
@@ -346,7 +346,7 @@ const editAddressDelivery = async (req, res) => {
       }
     }
 
-    await prisma.adressDelivery.update({
+    await prisma.address_delivery.update({
       where: { Id: addressId },
       data: {
         Name: name,
@@ -390,7 +390,7 @@ const deleteAddressDelivery = async (req, res) => {
       })
     }
 
-    const addressDelivery = await prisma.adressDelivery.findUnique({
+    const addressDelivery = await prisma.address_delivery.findUnique({
       where: { Id: addressDeliveryId },
     })
 
@@ -398,7 +398,7 @@ const deleteAddressDelivery = async (req, res) => {
       return res.status(404).json({ error: "Address delivery not found" })
     }
 
-    await prisma.adressDelivery.delete({
+    await prisma.address_delivery.delete({
       where: { Id: addressDeliveryId },
     })
 

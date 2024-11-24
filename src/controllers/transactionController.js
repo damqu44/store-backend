@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client")
+const { connect } = require("../routes/productRoutes")
 const prisma = new PrismaClient()
 
 getTransaction = async (req, res) => {
@@ -26,7 +27,7 @@ getTransaction = async (req, res) => {
 
   try {
     const productIds = transactionData.products.map((product) => product.id)
-
+    console.log(productIds)
     // Pobierz szczegóły produktów z bazy danych
     const products = await prisma.product.findMany({
       where: { Id: { in: productIds } },
@@ -50,7 +51,6 @@ getTransaction = async (req, res) => {
       }
       totalPrice += dbProduct.Price * product.Amount
 
-      // Przygotuj dane dla OrderItems
       orderItemsData.push({
         ProductId: dbProduct.Id,
         Quantity: product.Amount,
@@ -71,20 +71,32 @@ getTransaction = async (req, res) => {
         },
       })
       invoiceId = invoice.Id
+    } else {
+      invoiceId = undefined
     }
 
     const newOrder = await prisma.order.create({
       data: {
-        UserId: req.userId,
-        AdressDeliveryId: transactionData.addressDeliveryId,
-        InvoiceId: invoiceId,
+        User: {
+          connect: { Id: req.userId },
+        },
         OrderItems: {
           create: orderItemsData,
         },
         TotalPrice: totalPrice,
-        DeliveryMethodId: transactionData.deliveryMethodId,
         Comment: transactionData.comment,
         DiscountCode: transactionData.DiscountCode,
+        AddressDelivery: {
+          connect: { Id: transactionData.addressDeliveryId },
+        },
+        ...(invoiceId && {
+          Invoice: {
+            connect: { Id: invoiceId },
+          },
+        }),
+        DeliveryMethod: {
+          connect: { Id: transactionData.deliveryMethodId },
+        },
       },
     })
 
@@ -95,7 +107,7 @@ getTransaction = async (req, res) => {
       })
     }
 
-    await prisma.cartItem.deleteMany({
+    await prisma.cart_item.deleteMany({
       where: {
         Cart: {
           UserId: req.userId,

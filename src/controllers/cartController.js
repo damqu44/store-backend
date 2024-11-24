@@ -5,14 +5,12 @@ const addToCart = async (req, res) => {
   try {
     const { Id, Amount, isUpdate } = req.body
     let cartData = []
-
     if (req.userId) {
       const cart = await prisma.$transaction(async (prisma) => {
         let cart = await prisma.cart.findUnique({
           where: { UserId: req.userId },
           include: { CartItems: true },
         })
-
         if (!cart) {
           cart = await prisma.cart.create({
             data: { UserId: req.userId },
@@ -24,14 +22,14 @@ const addToCart = async (req, res) => {
         )
 
         if (existingCartItem) {
-          await prisma.cartItem.update({
+          await prisma.cart_item.update({
             where: { Id: existingCartItem.Id },
             data: {
               Amount: isUpdate ? Amount : existingCartItem.Amount + Amount,
             },
           })
         } else {
-          await prisma.cartItem.create({
+          await prisma.cart_item.create({
             data: {
               CartId: cart.Id,
               ProductId: Id,
@@ -51,11 +49,9 @@ const addToCart = async (req, res) => {
       cartData = req.cookies.cart
         ? JSON.parse(req.cookies.cart)
         : { CartItems: [] }
-
       const existingProductIndex = cartData.CartItems.findIndex(
         (item) => item.ProductId === Id
       )
-
       if (existingProductIndex !== -1) {
         if (isUpdate) {
           cartData.CartItems[existingProductIndex].Amount = Amount
@@ -65,7 +61,6 @@ const addToCart = async (req, res) => {
       } else {
         cartData.CartItems.push({ ProductId: Id, Amount: Amount })
       }
-
       res.cookie("cart", JSON.stringify(cartData), {
         httpOnly: false,
         secure: false,
@@ -78,7 +73,7 @@ const addToCart = async (req, res) => {
       .status(200)
       .send({ message: "Product data received", cartData: standardizedData })
   } catch (error) {
-    res.status(500).send({ message: "Internal Server Error" })
+    res.status(500).send({ message: "Internal Server Error", error: error })
   }
 }
 
@@ -99,13 +94,13 @@ const getCart = async (req, res) => {
         ? JSON.parse(req.cookies.cart)
         : { CartItems: [] }
     }
-    const standardizedData = await standardizeCartData(req.userId, cartData)
 
+    const standardizedData = await standardizeCartData(req.userId, cartData)
     res
       .status(200)
       .send({ message: "Cart data retrieved", cartData: standardizedData })
   } catch (error) {
-    res.status(500).send({ message: "Internal Server Error" })
+    res.status(500).send({ message: "Internal Server Error", error: error })
   }
 }
 
@@ -122,7 +117,7 @@ const removeFromCart = async (req, res) => {
         })
 
         if (cart) {
-          await prisma.cartItem.deleteMany({
+          await prisma.cart_item.deleteMany({
             where: {
               CartId: cart.Id,
               ProductId: productId,
@@ -178,12 +173,11 @@ const standardizeCartData = async (userId, cartData) => {
     if (cartData && cartData.CartItems.length > 0) {
       standardizedCartData = await Promise.all(
         cartData.CartItems.map(async (item) => {
-          const deliveryMethods = await prisma.product_DeliveryMethods.findMany(
-            {
+          const deliveryMethods =
+            await prisma.product_delivery_methods.findMany({
               where: { ProductId: item.Product.Id },
               include: { DeliveryMethod: true },
-            }
-          )
+            })
 
           const availableQuantity = item.Product.Quantity
           if (item.Amount > availableQuantity) {
@@ -212,16 +206,16 @@ const standardizeCartData = async (userId, cartData) => {
         where: { Id: item.ProductId },
         include: { Images: { take: 1 } },
       })
+
       if (product) {
         const availableQuantity = product.Quantity
         if (item.Amount > availableQuantity) {
           item.Amount = availableQuantity
         }
-        const deliveryMethods = await prisma.product_DeliveryMethods.findMany({
+        const deliveryMethods = await prisma.product_delivery_methods.findMany({
           where: { ProductId: product.Id },
           include: { DeliveryMethod: true },
         })
-
         standardizedCartData.push({
           ...product,
           cartInfo: {
@@ -248,7 +242,7 @@ const deleteCart = async (req, res) => {
         })
 
         if (cart) {
-          await prisma.cartItem.deleteMany({
+          await prisma.cart_item.deleteMany({
             where: {
               CartId: cart.Id,
             },
