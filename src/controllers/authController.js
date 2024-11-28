@@ -108,8 +108,6 @@ const login = async (req, res) => {
       secure: true,
       maxAge: 3600000,
       sameSite: "None",
-      domain: ".vercel.app", // Root domain for subdomain access
-      path: "/",
     })
 
     res.json({ message: "Logged in successfully" })
