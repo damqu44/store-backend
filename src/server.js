@@ -1,6 +1,6 @@
 const express = require("express")
 const path = require("path")
-// const customCors = require("./middleware/cors")
+const customCors = require("./middleware/cors")
 const cookieParser = require("cookie-parser")
 const session = require("express-session")
 const productRoutes = require("./routes/productRoutes")
@@ -17,7 +17,7 @@ const secretKey = process.env.JWT_SECRET
 
 const app = express()
 
-// app.use(customCors)
+app.use(customCors)
 app.use(express.json())
 
 app.use(cookieParser())
