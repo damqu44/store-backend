@@ -1,5 +1,8 @@
 function customCors(req, res, next) {
-  res.setHeader("Access-Control-Allow-Origin", "*") // Specyficzny origin Twojego frontendu
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://store-three-opal.vercel.app"
+  ) // Specyficzny origin Twojego frontendu
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET,OPTIONS,PATCH,DELETE,POST,PUT"
