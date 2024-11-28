@@ -104,9 +104,10 @@ const login = async (req, res) => {
     const token = jwt.sign({ userId: user.Id }, secret, { expiresIn: "1h" })
 
     res.cookie("authToken", token, {
-      httpOnly: false, // true - Zabezpieczenie przed dostępem z JavaScript
+      httpOnly: false,
       secure: true,
       maxAge: 3600000,
+      sameSite: "None",
     })
 
     res.json({ message: "Logged in successfully" })

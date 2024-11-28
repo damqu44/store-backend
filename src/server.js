@@ -1,8 +1,8 @@
 const express = require("express")
-const path = require("path")
 const customCors = require("./middleware/cors")
 const cookieParser = require("cookie-parser")
 const session = require("express-session")
+const errorHandler = require("./middleware/errorHandler")
 const productRoutes = require("./routes/productRoutes")
 const categoryRoutes = require("./routes/categoryRoutes")
 const searchRoutes = require("./routes/searchRoutes")
@@ -51,11 +51,7 @@ app.get("/product", (req, res) => {
   }
 })
 
-app.use((err, req, res, next) => {
-  console.error(err.stack)
-  res.status(500).send("Something broke!")
-})
-
+app.use(errorHandler)
 // const port = process.env.PORT || 3000
 // app.listen(port, () => {
 //   console.log(`Example app listening on port ${port}`)
