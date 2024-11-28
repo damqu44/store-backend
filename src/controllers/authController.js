@@ -108,7 +108,7 @@ const login = async (req, res) => {
       secure: true,
       maxAge: 3600000,
       sameSite: "None",
-      domain: "https://store-three-opal.vercel.app",
+      domain: ".vercel.app",
     })
 
     res.json({ message: "Logged in successfully" })
