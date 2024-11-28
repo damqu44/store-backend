@@ -26,7 +26,7 @@ app.use(
     secret: secretKey,
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false, httpOnly: false, sameSite: "lax" },
+    cookie: { secure: true, httpOnly: false, sameSite: "None" },
   })
 )
 
