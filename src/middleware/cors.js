@@ -1,10 +1,16 @@
 function customCors(req, res, next) {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:8080") // Specyficzny origin Twojego frontendu
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://store-three-opal.vercel.app"
+  ) // Specyficzny origin Twojego frontendu
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "GET, POST, PATCH, PUT, DELETE, OPTIONS"
+    "GET,OPTIONS,PATCH,DELETE,POST,PUT"
   )
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+  )
   res.setHeader("Access-Control-Allow-Credentials", "true") // Umożliwienie wysyłania i odbierania cookies
   if (req.method === "OPTIONS") {
     res.sendStatus(200)
