@@ -63,8 +63,8 @@ const addToCart = async (req, res) => {
       }
       res.cookie("cart", JSON.stringify(cartData), {
         httpOnly: false,
-        secure: false,
-        sameSite: "lax",
+        secure: true,
+        sameSite: "None",
       })
     }
 
@@ -151,8 +151,8 @@ const removeFromCart = async (req, res) => {
 
       res.cookie("cart", JSON.stringify(cartData), {
         httpOnly: false,
-        secure: false,
-        sameSite: "lax",
+        secure: true,
+        sameSite: "None",
       })
     }
 

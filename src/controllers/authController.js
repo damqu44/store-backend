@@ -105,7 +105,7 @@ const login = async (req, res) => {
 
     res.cookie("authToken", token, {
       httpOnly: false, // true - Zabezpieczenie przed dostępem z JavaScript
-      // secure: process.env.NODE_ENV === 'production', // Tylko w HTTPS w produkcji
+      secure: true,
       maxAge: 3600000,
     })
 
