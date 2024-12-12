@@ -32,7 +32,9 @@ app.use(
 )
 
 app.get("/favicon.ico", (req, res) => res.status(204).end())
-app.get("/verify-token", verifyToken)
+app.get("/verify-token", verifyToken, (req, res) => {
+  res.json({ message: "Logged in", userId: req.userId })
+})
 app.use("/auth", authRoutes)
 app.use("/products", productRoutes)
 app.use("/categories", categoryRoutes)

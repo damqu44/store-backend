@@ -10,19 +10,15 @@ const verifyToken = (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         error: "No token provided",
-        message: req.cookies,
-        token: req.cookies.authToken,
       })
     }
 
-    const decoded = jwt.verify(token, secret) // Pobierz sekret z env
+    const decoded = jwt.verify(token, secret)
     req.userId = decoded.userId
     next()
   } catch (err) {
     res.status(403).json({
-      error: `Invalid or expired token ${err}}`,
-      message: req.cookies,
-      token: req.cookies.authToken,
+      error: `Invalid or expired token`,
     })
   }
 }
