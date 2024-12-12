@@ -1,7 +1,9 @@
+require("dotenv").config()
+
 const verifyToken = (req, res, next) => {
   try {
-    // const token  req.cookies.authToken || req.headers.authorization?.split(" ")[1] // Obsługa Bearer token
-    const token = req.cookies.authToken || req.headers["authorization"]
+    const token =
+      req.cookies.authToken || req.headers.authorization?.split(" ")[1] // Obsługa Bearer token
 
     if (!token) {
       return res.status(401).json({
@@ -11,12 +13,12 @@ const verifyToken = (req, res, next) => {
       })
     }
 
-    const decoded = jwt.verify(token, secret)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) // Pobierz sekret z env
     req.userId = decoded.userId
     next()
   } catch (err) {
     res.status(403).json({
-      error: "Invalid or expired token",
+      error: `Invalid or expired token ${err}}`,
       message: req.cookies,
       token: req.cookies.authToken,
     })
