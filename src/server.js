@@ -3,6 +3,7 @@ const customCors = require("./middleware/cors")
 const cookieParser = require("cookie-parser")
 const session = require("express-session")
 const errorHandler = require("./middleware/errorHandler")
+const verifyToken = require("./middleware/authMiddleware")
 const productRoutes = require("./routes/productRoutes")
 const categoryRoutes = require("./routes/categoryRoutes")
 const searchRoutes = require("./routes/searchRoutes")
@@ -31,7 +32,7 @@ app.use(
 )
 
 app.get("/favicon.ico", (req, res) => res.status(204).end())
-
+app.get("/verify-token", verifyToken)
 app.use("/auth", authRoutes)
 app.use("/products", productRoutes)
 app.use("/categories", categoryRoutes)

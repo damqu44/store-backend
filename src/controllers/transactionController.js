@@ -1,5 +1,4 @@
 const { PrismaClient } = require("@prisma/client")
-const { connect } = require("../routes/productRoutes")
 const prisma = new PrismaClient()
 
 const getTransaction = async (req, res) => {
@@ -27,7 +26,6 @@ const getTransaction = async (req, res) => {
 
   try {
     const productIds = transactionData.products.map((product) => product.id)
-    console.log(productIds)
     const products = await prisma.product.findMany({
       where: { Id: { in: productIds } },
     })
