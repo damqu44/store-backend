@@ -1,4 +1,6 @@
 require("dotenv").config()
+const secret = process.env.JWT_SECRET
+const jwt = require("jsonwebtoken")
 
 const verifyToken = (req, res, next) => {
   try {
@@ -13,7 +15,7 @@ const verifyToken = (req, res, next) => {
       })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET) // Pobierz sekret z env
+    const decoded = jwt.verify(token, secret) // Pobierz sekret z env
     req.userId = decoded.userId
     next()
   } catch (err) {
