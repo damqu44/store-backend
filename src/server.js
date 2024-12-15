@@ -33,7 +33,12 @@ app.use(
 
 app.get("/favicon.ico", (req, res) => res.status(204).end())
 app.get("/verify-token", verifyToken, (req, res) => {
-  res.json({ message: "Logged in", userId: req.userId })
+  if (!req.userId) {
+    return res
+      .status(401)
+      .json({ authenticated: false, message: "Unauthorized" })
+  }
+  res.json({ authenticated: true, userId: req.userId })
 })
 app.use("/auth", authRoutes)
 app.use("/products", productRoutes)
